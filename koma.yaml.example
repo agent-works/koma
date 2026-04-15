@@ -1,0 +1,45 @@
+defaults:
+  text: gemini-2.5-pro
+  image: gemini-2.5-flash-image
+  video: seedance-1.5-pro
+
+providers:
+  vertex-ai:
+    type: vertex-ai
+    project: your-gcp-project-id
+    location: us-central1
+    service_account:
+      client_email: your-service-account@your-gcp-project-id.iam.gserviceaccount.com
+      private_key: "-----BEGIN PRIVATE KEY-----\n<your-private-key>\n-----END PRIVATE KEY-----\n"
+    models:
+      - gemini-2.5-pro
+      - gemini-2.5-flash
+      - gemini-2.5-flash-image
+
+  volcengine-ark:
+    type: volcengine-ark
+    key: your-ark-api-key
+    models:
+      - seedance-2.0
+      - seedance-1.5-pro
+
+  # openai:
+  #   type: openai
+  #   key: your-openai-api-key
+  #   models:
+  #     - gpt-4o
+  #     - gpt-4o-mini
+
+  # anthropic:
+  #   type: anthropic
+  #   key: your-anthropic-api-key
+  #   models:
+  #     - claude-opus-4-6
+  #     - claude-sonnet-4-6
+
+  # custom:
+  #   type: openai-compatible
+  #   endpoint: https://your-proxy/v1
+  #   key: your-api-key
+  #   models:
+  #     - your-model-name

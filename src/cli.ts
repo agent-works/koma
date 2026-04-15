@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { handleTextCommand } from './commands/text.js';
 import { handleImageCommand } from './commands/image.js';
+import { handleVideoCommand } from './commands/video.js';
 import { handleModelsCommand } from './commands/models.js';
 import { loadConfig } from './config.js';
 
@@ -42,7 +43,7 @@ Configure once, use everywhere.
 Commands:
   koma text [prompt]     Generate text (chat completion)
   koma image [prompt]    Generate an image and save to file
-  koma video [prompt]    Generate a video (placeholder)
+  koma video [prompt]    Generate a video (Seedance 1.5 Pro / 2.0)
   koma models            List all available models as JSON
 
 Global Options:
@@ -75,8 +76,30 @@ Examples:
   # Image with specific model
   koma image -m gemini-3.1-flash-image-preview "a cyberpunk cityscape" -o city.png
 
+  # Video generation (Seedance 1.5 Pro, text-to-video)
+  koma video "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
+
+  # Video with image first-frame (image-to-video)
+  koma video "女孩微笑着转身" --image https://example.com/photo.png -o out.mp4
+
+  # Video with Seedance 2.0 (需先开通权限)
+  koma video -m seedance-2.0 "赛博朋克城市" -o city.mp4
+
+  # Video with options
+  koma video "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no-watermark
+
   # List all models and defaults (JSON)
   koma models
+
+Video Options:
+  --image <url>            First-frame image URL (image-to-video)
+  --ratio <ratio>          Aspect ratio: 16:9, 9:16, 1:1, 21:9, 3:4, adaptive
+  --duration <sec>         Duration: 5 or 10 seconds
+  --audio                  Generate audio track
+  --no-watermark           Disable watermark
+  --camera-fixed           Keep camera static
+  --seed <n>               Random seed (0–4294967295)
+  --negative-prompt <text> What to exclude
 
 Output Format:
   All commands output JSON to stdout by default.
@@ -84,6 +107,7 @@ Output Format:
 
   text response:  {"model": "...", "text": "...", "usage": {"inputTokens": N, "outputTokens": N}}
   image response: {"model": "...", "filePath": "...", "mimeType": "...", "sizeBytes": N}
+  video response: {"model": "...", "taskId": "...", "status": "succeeded", "filePath": "..."}
 
 Configuration:
   Config file: ./koma.yaml or ~/.koma/config.yaml
@@ -141,16 +165,35 @@ program
 
 program
   .command('video [prompt]')
-  .description('Generate a video using an AI model (placeholder)')
-  .action(async () => {
-    console.error(
-      JSON.stringify(
-        { error: 'Video generation not yet implemented' },
-        null,
-        2
-      )
-    );
-    process.exit(1);
+  .description('Generate a video using Seedance (1.5 Pro / 2.0)')
+  .option('--image <url>', 'First-frame image URL for image-to-video')
+  .option('--ratio <ratio>', 'Aspect ratio (16:9, 9:16, 1:1, 21:9, 3:4, adaptive)')
+  .option('--duration <seconds>', 'Duration: 5 or 10', (v: string) => parseInt(v))
+  .option('--audio', 'Generate audio track')
+  .option('--no-watermark', 'Disable watermark')
+  .option('--camera-fixed', 'Keep camera static')
+  .option('--seed <number>', 'Random seed for reproducibility', (v: string) => parseInt(v))
+  .option('--negative-prompt <text>', 'What to exclude from the video')
+  .option('--poll-interval <seconds>', 'Poll interval in seconds (default 5)', (v: string) => parseInt(v))
+  .option('--timeout <seconds>', 'Max wait time in seconds (default 600)', (v: string) => parseInt(v))
+  .action(async (prompt: string | undefined, cmdOpts: any) => {
+    const parent = program.opts();
+    await handleVideoCommand(prompt, {
+      model: parent.model,
+      input: parent.input,
+      output: parent.output,
+      json: parent.json !== false,
+      image: cmdOpts.image,
+      ratio: cmdOpts.ratio,
+      duration: cmdOpts.duration,
+      audio: cmdOpts.audio,
+      noWatermark: cmdOpts.watermark === false, // --no-watermark sets watermark to false
+      cameraFixed: cmdOpts.cameraFixed,
+      seed: cmdOpts.seed,
+      negativePrompt: cmdOpts.negativePrompt,
+      pollInterval: cmdOpts.pollInterval,
+      timeout: cmdOpts.timeout,
+    });
   });
 
 program

@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
 import { GoogleAuth } from 'google-auth-library';
 import { BaseProvider } from './base.js';
 import { TextRequest, TextResponse, ImageRequest, ImageResponse, ProviderConfig } from '../types.js';
+import path from 'path';
+import fs from 'fs';
 
 interface AccessTokenCache {
   token: string;
@@ -15,13 +15,11 @@ export class VertexAIProvider extends BaseProvider {
   private models: string[];
   private googleAuth: GoogleAuth | null = null;
   private tokenCache: AccessTokenCache | null = null;
-  private configDir: string;
 
-  constructor(config: ProviderConfig, configDir: string = process.cwd()) {
+  constructor(config: ProviderConfig) {
     super();
     this.config = config;
     this.models = config.models || [];
-    this.configDir = configDir;
   }
 
   /**
@@ -35,24 +33,18 @@ export class VertexAIProvider extends BaseProvider {
 
     // Initialize GoogleAuth if needed
     if (!this.googleAuth) {
-      if (!this.config.credentials) {
-        throw new Error('Vertex AI provider requires credentials path (credentials field in config)');
+      if (!this.config.service_account) {
+        throw new Error(
+          'Vertex AI provider requires service_account credentials in config ' +
+          '(service_account.client_email and service_account.private_key)'
+        );
       }
-
-      // Resolve credentials path relative to config directory or as absolute
-      const credentialsPath = path.isAbsolute(this.config.credentials)
-        ? this.config.credentials
-        : path.resolve(this.configDir, this.config.credentials);
-
-      if (!fs.existsSync(credentialsPath)) {
-        throw new Error(`Credentials file not found: ${credentialsPath}`);
-      }
-
-      const keyFileContent = fs.readFileSync(credentialsPath, 'utf-8');
-      const keyFile = JSON.parse(keyFileContent);
 
       this.googleAuth = new GoogleAuth({
-        credentials: keyFile,
+        credentials: {
+          client_email: this.config.service_account.client_email,
+          private_key: this.config.service_account.private_key,
+        },
         scopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
     }
@@ -70,32 +62,20 @@ export class VertexAIProvider extends BaseProvider {
     // Cache the token
     this.tokenCache = {
       token,
-      expiresAt: expiry_date || Date.now() + 60 * 60 * 1000, // Default 1 hour if no expiry
+      expiresAt: expiry_date || Date.now() + 60 * 60 * 1000,
     };
 
     return token;
   }
 
   /**
-   * Extract project ID from credentials
+   * Get project ID from config
    */
   private getProjectId(): string {
-    if (!this.config.credentials) {
-      throw new Error('Vertex AI provider requires credentials path');
+    if (!this.config.project) {
+      throw new Error('Vertex AI provider requires "project" field in config');
     }
-
-    const credentialsPath = path.isAbsolute(this.config.credentials)
-      ? this.config.credentials
-      : path.resolve(this.configDir, this.config.credentials);
-
-    const keyFileContent = fs.readFileSync(credentialsPath, 'utf-8');
-    const keyFile = JSON.parse(keyFileContent);
-
-    if (!keyFile.project_id) {
-      throw new Error('project_id not found in credentials file');
-    }
-
-    return keyFile.project_id;
+    return this.config.project;
   }
 
   /**

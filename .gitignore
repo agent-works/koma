@@ -1,3 +1,4 @@
+koma.yaml
 node_modules/
 dist/
 *.log
@@ -5,6 +6,7 @@ dist/
 .env
 .env.local
 *.json.key
+*-zhangxin-*.json
 test_output.png
 git-init.command
 git-init.sh
