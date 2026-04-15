@@ -1,11 +1,16 @@
 {
-  "name": "koma",
+  "name": "koma-ai",
   "version": "0.1.0",
   "description": "Unified CLI for AI model access (text, image, video generation)",
   "type": "module",
   "bin": {
     "koma": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "koma.yaml.example",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
