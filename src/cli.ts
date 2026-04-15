@@ -174,10 +174,11 @@ program
   .addHelpText('beforeAll', '')
   .configureHelp({ formatHelp: () => buildSeedanceHelp() })
   .action(async (prompt: string | undefined, cmdOpts: any) => {
+    const parent = program.opts();
     await handleSeedanceCommand(prompt, {
-      model: cmdOpts.model,
-      input: cmdOpts.input,
-      output: cmdOpts.output,
+      model: cmdOpts.model || parent.model,
+      input: cmdOpts.input || parent.input,
+      output: cmdOpts.output || parent.output,
       json: cmdOpts.json !== false,
       firstFrame: cmdOpts.firstFrame,
       lastFrame: cmdOpts.lastFrame,
