@@ -1,8 +1,8 @@
 # koma
 
-统一的 AI 模型 CLI 工具，为 [v8-research]（漫剧自动生成引擎）提供模型调用基础设施。
+统一的 AI 模型 CLI 工具，为 agent 研究和开发提供多模态模型调用基础设施。
 
-一套命令调用不同 provider 的文本、图像、视频生成模型。配置一次，到处使用。
+一套命令调用不同 provider 的文本、图像、视频生成模型，让 agent 通过 CLI 便捷地使用各种能力。配置一次，到处使用。
 
 ## 安装
 
@@ -163,10 +163,10 @@ src/
 2. 在 `src/providers/index.ts` 的工厂函数中注册
 3. 在 `koma.yaml` 中配置
 
-## 在 v8-research 中的角色
+## 设计理念
 
-koma 是漫剧引擎研究路线的第一步（模型工具层），为后续模块提供统一的模型调用能力：
+koma 的目标是成为 agent 的模型工具层——agent 不需要关心 provider 差异和认证细节，只需通过统一的 CLI 调用所需能力：
 
-- **分镜设计** → `koma text` （文本生成）
-- **参考图生成** → `koma image` （图像生成）
-- **视频生成** → `koma video` （Seedance 1.5 Pro / 2.0，火山方舟）
+- `koma text` — 推理、规划、分析
+- `koma image` — 视觉内容生成
+- `koma video` — 动态内容生成

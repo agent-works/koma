@@ -1,7 +1,7 @@
 {
   "name": "koma-ai",
-  "version": "0.1.1",
-  "description": "Unified CLI for AI model access (text, image, video generation)",
+  "version": "0.1.2",
+  "description": "Unified AI model CLI for agents — text, image, video generation across providers",
   "type": "module",
   "bin": {
     "koma": "./dist/cli.js"
