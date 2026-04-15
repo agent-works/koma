@@ -20,7 +20,7 @@ cp $(npm root -g)/koma-ai/koma.yaml.example ./koma.yaml
 # 使用
 koma text "用三句话介绍人工智能"
 koma image "一只橘猫戴着礼帽坐在窗台上，水彩画风格" -o cat.png
-koma video "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
+koma seedance "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
 koma models
 ```
 
@@ -30,7 +30,7 @@ koma models
 |------|------|
 | `koma text [prompt]` | 文本生成（chat completion） |
 | `koma image [prompt]` | 图像生成，保存到文件 |
-| `koma video [prompt]` | 视频生成（Seedance 1.5 Pro / 2.0） |
+| `koma seedance [prompt]` | 视频生成（Seedance 1.5 Pro / 2.0），运行 `koma seedance --help` 查看完整参数 |
 | `koma models` | 列出所有可用模型（JSON） |
 
 ### 常用选项
@@ -45,17 +45,22 @@ koma models
 --json                 JSON 输出（默认开启）
 ```
 
-### 视频选项
+### Seedance 视频生成
 
-```
---image <url>            首帧图片 URL（图生视频）
---ratio <ratio>          宽高比: 16:9, 9:16, 1:1, 21:9, 3:4, adaptive
---duration <sec>         时长: 5 或 10 秒
---audio                  生成音频
---no-watermark           去除水印
---camera-fixed           固定镜头
---seed <n>               随机种子 (0–4294967295)
---negative-prompt <text> 反向提示词
+`koma seedance` 是专门的 Seedance 视频生成命令，支持文生视频、首帧/尾帧驱动、音频生成、draft 预览等。运行 `koma seedance --help` 查看完整参数和丰富示例。
+
+```bash
+# 文生视频
+koma seedance "一只橘猫在屋顶上奔跑" -o cat.mp4
+
+# 首帧驱动
+koma seedance "女孩微笑着转身" --first-frame portrait.jpg --ratio 9:16
+
+# 首尾帧 + 音频
+koma seedance "角色穿过花园" --first-frame start.jpg --last-frame end.jpg --audio
+
+# 2.0 模型
+koma seedance -m 2.0 "赛博朋克城市夜景" --duration 15 --audio
 ```
 
 ### 示例
@@ -71,13 +76,13 @@ koma text --input chapter.txt --system "分析这个章节的主要人物" -o an
 koma image -m gemini-3.1-flash-image-preview "a cyberpunk cityscape" -o city.png
 
 # 文生视频（默认 Seedance 1.5 Pro）
-koma video "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
+koma seedance "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
 
-# 图生视频（用首帧图片驱动）
-koma video "女孩微笑着转身" --image https://example.com/photo.png -o out.mp4
+# 图生视频（首帧驱动）
+koma seedance "女孩微笑着转身" --first-frame photo.jpg -o out.mp4
 
 # 视频生成带选项
-koma video "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no-watermark
+koma seedance "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no-watermark
 ```
 
 ## 配置
@@ -146,12 +151,13 @@ src/
   commands/
     text.ts           # text 子命令
     image.ts          # image 子命令
-    video.ts          # video 子命令
+    seedance.ts       # seedance 子命令（视频生成）
     models.ts         # models 子命令
   providers/
     base.ts           # Provider 抽象基类
     vertex-ai.ts      # Vertex AI 实现（文本 & 图像）
-    volcengine-ark.ts # 火山方舟实现（Seedance 视频生成）
+    volcengine-ark.ts # 火山方舟实现（Seedance 视频 & 文本）
+    openai-compatible.ts # OpenAI 兼容实现（文本 & 图像）
     index.ts          # Provider 工厂
 ```
 
@@ -169,4 +175,4 @@ koma 的目标是成为 agent 的模型工具层——agent 不需要关心 prov
 
 - `koma text` — 推理、规划、分析
 - `koma image` — 视觉内容生成
-- `koma video` — 动态内容生成
+- `koma seedance` — Seedance 视频生成（专属命令，完整参数支持）
