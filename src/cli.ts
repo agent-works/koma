@@ -44,6 +44,7 @@ Commands:
   koma text [prompt]        Generate text (chat completion)
   koma image [prompt]       Generate an image and save to file
   koma seedance [prompt]    Generate video (Seedance 1.5 Pro / 2.0)
+                            Run "koma seedance --help" for full params and examples
   koma models               List all available models as JSON
 
 Global Options:
