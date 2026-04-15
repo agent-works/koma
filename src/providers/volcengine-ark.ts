@@ -52,6 +52,7 @@ interface ArkTaskResponse {
   content?: {
     video_url?: string;
     video_duration?: number;
+    last_frame_url?: string;
   };
   error?: {
     code: string;
@@ -175,11 +176,19 @@ export class VolcengineArkProvider extends BaseProvider {
       content.push({ type: 'text', text: req.prompt });
     }
 
-    // Add reference image (first-frame / image-to-video)
+    // Add first frame image
     if (req.referenceImageUrl) {
       content.push({
         type: 'image_url',
         image_url: { url: req.referenceImageUrl },
+      });
+    }
+
+    // Add last frame image
+    if (req.lastFrameUrl) {
+      content.push({
+        type: 'image_url',
+        image_url: { url: req.lastFrameUrl },
       });
     }
 
@@ -191,11 +200,14 @@ export class VolcengineArkProvider extends BaseProvider {
     // Optional parameters
     if (req.ratio !== undefined) body.ratio = req.ratio;
     if (req.duration !== undefined) body.duration = req.duration;
+    if (req.resolution !== undefined) body.resolution = req.resolution;
     if (req.generateAudio !== undefined) body.generate_audio = req.generateAudio;
     if (req.seed !== undefined) body.seed = req.seed;
     if (req.watermark !== undefined) body.watermark = req.watermark;
     if (req.negativePrompt !== undefined) body.negative_prompt = req.negativePrompt;
     if (req.cameraFixed !== undefined) body.camera_fixed = req.cameraFixed;
+    if (req.returnLastFrame) body.return_last_frame = true;
+    if (req.draft) body.service_tier = 'draft';
 
     const response = await fetch(url, {
       method: 'POST',
@@ -267,6 +279,7 @@ export class VolcengineArkProvider extends BaseProvider {
           taskId,
           status: 'succeeded',
           videoUrl: task.content?.video_url || undefined,
+          lastFrameUrl: task.content?.last_frame_url || undefined,
         };
       }
 
