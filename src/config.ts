@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import { KomaConfig, ProviderConfig } from './types.js';
 
 let configCache: KomaConfig | null = null;
-let modelToProviderMap: Map<string, string> | null = null;
+let modelToProviderMap: Map<string, string[]> | null = null;
 let configDirCache: string | null = null;
 
 function resolveEnvVars(value: any): any {
@@ -60,23 +60,25 @@ export function loadConfig(): KomaConfig {
   // Resolve environment variables
   configCache = resolveEnvVars(rawConfig) as KomaConfig;
 
-  // Build model-to-provider map
+  // Build model-to-provider map (one model can map to multiple providers)
   modelToProviderMap = new Map();
   for (const [providerName, providerConfig] of Object.entries(
     configCache.providers
   )) {
     for (const model of providerConfig.models) {
-      modelToProviderMap.set(model, providerName);
+      const existing = modelToProviderMap.get(model) || [];
+      existing.push(providerName);
+      modelToProviderMap.set(model, existing);
     }
   }
 
   return configCache;
 }
 
-export function resolveProvider(modelName: string): {
+export function resolveProviders(modelName: string): Array<{
   provider: string;
   config: ProviderConfig;
-} {
+}> {
   const config = loadConfig();
 
   if (!modelToProviderMap) {
@@ -85,13 +87,15 @@ export function resolveProvider(modelName: string): {
       config.providers
     )) {
       for (const model of providerConfig.models) {
-        modelToProviderMap.set(model, providerName);
+        const existing = modelToProviderMap.get(model) || [];
+        existing.push(providerName);
+        modelToProviderMap.set(model, existing);
       }
     }
   }
 
-  const providerName = modelToProviderMap.get(modelName);
-  if (!providerName) {
+  const providerNames = modelToProviderMap.get(modelName);
+  if (!providerNames || providerNames.length === 0) {
     throw new Error(
       `Model "${modelName}" not found in any provider. Available models: ${Array.from(
         modelToProviderMap.keys()
@@ -99,12 +103,13 @@ export function resolveProvider(modelName: string): {
     );
   }
 
-  const providerConfig = config.providers[providerName];
-  if (!providerConfig) {
-    throw new Error(`Provider "${providerName}" not configured`);
-  }
-
-  return { provider: providerName, config: providerConfig };
+  return providerNames.map(name => {
+    const providerConfig = config.providers[name];
+    if (!providerConfig) {
+      throw new Error(`Provider "${name}" not configured`);
+    }
+    return { provider: name, config: providerConfig };
+  });
 }
 
 export function getDefaultModel(type: 'text' | 'image' | 'video'): string {
