@@ -76,6 +76,14 @@ export interface VideoRequest {
   pollIntervalMs?: number;
   /** Max wait time in ms (default 600000 = 10 min) */
   timeoutMs?: number;
+  /** Output resolution: "480p", "720p", "1080p" */
+  resolution?: string;
+  /** Last frame image URL or path (for first+last frame control) */
+  lastFrameUrl?: string;
+  /** Return last frame URL in response (for chaining clips) */
+  returnLastFrame?: boolean;
+  /** Draft preview mode (lower cost, 1.5 Pro only) */
+  draft?: boolean;
 }
 
 export interface VideoResponse {
@@ -84,6 +92,8 @@ export interface VideoResponse {
   status: 'queued' | 'processing' | 'succeeded' | 'failed';
   videoUrl?: string;
   filePath?: string;
+  /** Last frame image URL (when return_last_frame was requested) */
+  lastFrameUrl?: string;
   error?: string;
 }
 
