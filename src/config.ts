@@ -32,17 +32,11 @@ export function loadConfig(): KomaConfig {
   }
 
   // Search order:
-  // 1. Current working directory
-  // 2. Directory where the koma binary lives (the installed package)
-  // 3. ~/.koma/config.yaml
-  const cliDir = path.dirname(fs.realpathSync(process.argv[1] || __filename));
-  // If cli is in dist/, config is one level up
-  const pkgDir = path.basename(cliDir) === 'dist' ? path.dirname(cliDir) : cliDir;
-
+  // 1. ./koma.yaml  (current working directory, project-level)
+  // 2. ~/.koma/koma.yaml (global)
   const searchPaths = [
     path.join(process.cwd(), 'koma.yaml'),
-    path.join(pkgDir, 'koma.yaml'),
-    path.join(process.env.HOME || '~', '.koma', 'config.yaml'),
+    path.join(process.env.HOME || '~', '.koma', 'koma.yaml'),
   ];
 
   let configPath: string | undefined;
@@ -119,7 +113,7 @@ export function getDefaultModel(type: 'text' | 'image' | 'video'): string {
 
   if (!modelName) {
     throw new Error(
-      `No default ${type} model configured in koma.yaml or ~/.koma/config.yaml`
+      `No default ${type} model configured in koma.yaml or ~/.koma/koma.yaml`
     );
   }
 

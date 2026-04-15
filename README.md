@@ -86,7 +86,7 @@ koma video "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no-wa
 
 1. 当前工作目录 `./koma.yaml`
 2. koma 安装目录 `<pkg>/koma.yaml`
-3. 用户目录 `~/.koma/config.yaml`
+3. 用户目录 `~/.koma/koma.yaml`
 
 ```yaml
 defaults:

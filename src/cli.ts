@@ -110,7 +110,7 @@ Output Format:
   video response: {"model": "...", "taskId": "...", "status": "succeeded", "filePath": "..."}
 
 Configuration:
-  Config file: ./koma.yaml or ~/.koma/config.yaml
+  Config file search order: ./koma.yaml → ~/.koma/koma.yaml
   Keys can reference env vars: $OPENAI_API_KEY
   Run "koma models" for full JSON config details.
 `.trim();
