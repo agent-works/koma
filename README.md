@@ -4,14 +4,18 @@
 
 一套命令调用不同 provider 的文本、图像、视频生成模型。配置一次，到处使用。
 
+## 安装
+
+```bash
+npm install -g koma-ai
+```
+
 ## 快速开始
 
 ```bash
-# 安装依赖 & 构建
-npm install && npm run build
-
-# 全局链接（可选）
-npm link
+# 复制配置模板并填入你的密钥
+cp $(npm root -g)/koma-ai/koma.yaml.example ./koma.yaml
+# 编辑 koma.yaml，填写 provider 配置
 
 # 使用
 koma text "用三句话介绍人工智能"
@@ -86,18 +90,21 @@ koma video "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no-wa
 
 ```yaml
 defaults:
-  text: gemini-3.1-pro-preview
-  image: gemini-3-pro-image-preview
+  text: gemini-2.5-pro
+  image: gemini-2.5-flash-image
   video: seedance-1.5-pro
 
 providers:
   vertex-ai:
     type: vertex-ai
-    credentials: ./path-to-service-account.json
+    project: your-gcp-project-id
     location: us-central1
+    service_account:
+      client_email: your-sa@your-project.iam.gserviceaccount.com
+      private_key: "-----BEGIN PRIVATE KEY-----\n<your-key>\n-----END PRIVATE KEY-----\n"
     models:
-      - gemini-3.1-pro-preview
-      - gemini-3-pro-image-preview
+      - gemini-2.5-pro
+      - gemini-2.5-flash-image
 
   volcengine-ark:
     type: volcengine-ark
@@ -107,7 +114,7 @@ providers:
       - seedance-1.5-pro
 ```
 
-credentials 路径相对于配置文件所在目录解析。值中可引用环境变量：`$ENV_VAR`。
+所有配置内容自包含在 `koma.yaml` 中，不依赖外部文件或环境变量。
 
 Volcengine Ark API Key 在[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/apikey)获取。
 
