@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { handleTextCommand } from './commands/text.js';
 import { handleImageCommand } from './commands/image.js';
 import { handleSeedanceCommand, buildSeedanceHelp } from './commands/seedance.js';
 import { handleModelsCommand } from './commands/models.js';
 import { loadConfig } from './config.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'));
 
 /**
  * Build the rich help text with live model info from config
@@ -108,7 +114,7 @@ const program = new Command();
 
 program
   .name('koma')
-  .version('0.1.0')
+  .version(pkg.version)
   .option('-m, --model <model>', 'Model to use')
   .option('--temperature <number>', 'Temperature for generation', (val: string) => parseFloat(val))
   .option('--max-tokens <number>', 'Maximum tokens to generate', (val: string) => parseInt(val))
