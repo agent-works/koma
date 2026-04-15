@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateSeedanceParams } from '../src/commands/seedance.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { validateSeedanceParams, resolveImageUrl } from '../src/commands/seedance.js';
 
 describe('validateSeedanceParams', () => {
   it('accepts valid 1.5-pro params', () => {
@@ -83,5 +85,47 @@ describe('validateSeedanceParams', () => {
     assert.doesNotThrow(() => {
       validateSeedanceParams('1.5-pro', {});
     });
+  });
+});
+
+describe('resolveImageUrl', () => {
+  it('passes through HTTPS URLs unchanged', () => {
+    const url = 'https://example.com/image.jpg';
+    assert.equal(resolveImageUrl(url), url);
+  });
+
+  it('passes through HTTP URLs unchanged', () => {
+    const url = 'http://example.com/image.jpg';
+    assert.equal(resolveImageUrl(url), url);
+  });
+
+  it('converts local file to base64 data URI', () => {
+    // Create a tiny test file
+    const tmpFile = path.join('/tmp', 'koma-test-image.png');
+    fs.writeFileSync(tmpFile, Buffer.from([0x89, 0x50, 0x4e, 0x47])); // PNG magic bytes
+    try {
+      const result = resolveImageUrl(tmpFile);
+      assert.ok(result.startsWith('data:image/png;base64,'));
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+
+  it('detects JPEG mime from extension', () => {
+    const tmpFile = path.join('/tmp', 'koma-test.jpg');
+    fs.writeFileSync(tmpFile, Buffer.from([0xff, 0xd8, 0xff]));
+    try {
+      const result = resolveImageUrl(tmpFile);
+      assert.ok(result.startsWith('data:image/jpeg;base64,'));
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+
+  it('throws on nonexistent file', () => {
+    assert.throws(
+      () => resolveImageUrl('/tmp/nonexistent-koma-image.jpg'),
+      { message: 'Image file not found: /tmp/nonexistent-koma-image.jpg' }
+    );
   });
 });

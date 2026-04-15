@@ -4,6 +4,46 @@ import { VideoRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
 
+// ── Local image → base64 data URI ───────────────────────────────────
+
+const MIME_MAP: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.bmp': 'image/bmp',
+  '.tiff': 'image/tiff',
+  '.tif': 'image/tiff',
+  '.gif': 'image/gif',
+  '.heic': 'image/heic',
+  '.heif': 'image/heic',
+};
+
+const MAX_IMAGE_SIZE = 30 * 1024 * 1024; // 30MB
+
+export function resolveImageUrl(pathOrUrl: string): string {
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return pathOrUrl;
+  }
+
+  const filePath = path.resolve(pathOrUrl);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Image file not found: ${pathOrUrl}`);
+  }
+
+  const stat = fs.statSync(filePath);
+  if (stat.size > MAX_IMAGE_SIZE) {
+    throw new Error(
+      `Image file exceeds 30MB limit: ${pathOrUrl} (${(stat.size / 1024 / 1024).toFixed(1)}MB)`
+    );
+  }
+
+  const ext = path.extname(filePath).toLowerCase();
+  const mime = MIME_MAP[ext] || 'image/jpeg';
+  const base64 = fs.readFileSync(filePath).toString('base64');
+  return `data:${mime};base64,${base64}`;
+}
+
 // ── Model short names → config model names ─────────────────────────
 const SEEDANCE_MODEL_MAP: Record<string, string> = {
   '1.5-pro': 'seedance-1.5-pro',
@@ -218,6 +258,14 @@ export async function handleSeedanceCommand(
     const outputPath =
       options.output || path.join(process.cwd(), `video-${Date.now()}.mp4`);
 
+    // Resolve local image paths to base64 data URIs
+    const firstFrameUrl = options.firstFrame
+      ? resolveImageUrl(options.firstFrame)
+      : undefined;
+    const lastFrameUrl = options.lastFrame
+      ? resolveImageUrl(options.lastFrame)
+      : undefined;
+
     // Resolve providers
     const providers = resolveProviders(modelName);
 
@@ -226,8 +274,8 @@ export async function handleSeedanceCommand(
       model: modelName,
       prompt: finalPrompt,
       outputPath,
-      referenceImageUrl: options.firstFrame,
-      lastFrameUrl: options.lastFrame,
+      referenceImageUrl: firstFrameUrl,
+      lastFrameUrl: lastFrameUrl,
       ratio: options.ratio,
       duration: options.duration,
       resolution: options.resolution,
