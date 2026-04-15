@@ -127,13 +127,15 @@ export function getDefaultModel(type: 'text' | 'image' | 'video'): string {
 
 export function getAllModels(): string[] {
   const config = loadConfig();
-  const models: string[] = [];
+  const seen = new Set<string>();
 
   for (const providerConfig of Object.values(config.providers)) {
-    models.push(...providerConfig.models);
+    for (const model of providerConfig.models) {
+      seen.add(model);
+    }
   }
 
-  return models;
+  return Array.from(seen);
 }
 
 export function getConfigDir(): string {
