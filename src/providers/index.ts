@@ -1,6 +1,7 @@
 import { Provider, ProviderConfig } from '../types.js';
 import { VertexAIProvider } from './vertex-ai.js';
 import { VolcengineArkProvider } from './volcengine-ark.js';
+import { OpenAICompatibleProvider } from './openai-compatible.js';
 
 export function createProvider(
   providerType: string,
@@ -12,14 +13,12 @@ export function createProvider(
     case 'volcengine-ark':
       return new VolcengineArkProvider(config);
     case 'openai':
-      throw new Error('OpenAI provider not yet implemented');
     case 'anthropic':
-      throw new Error('Anthropic provider not yet implemented');
     case 'openai-compatible':
-      throw new Error('OpenAI-compatible provider not yet implemented');
+      return new OpenAICompatibleProvider(config);
     default:
       throw new Error(`Unknown provider type: ${providerType}`);
   }
 }
 
-export { VertexAIProvider, VolcengineArkProvider };
+export { VertexAIProvider, VolcengineArkProvider, OpenAICompatibleProvider };
