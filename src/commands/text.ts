@@ -1,7 +1,7 @@
 import fs from 'fs';
-import { TextRequest, TextResponse } from '../types.js';
-import { loadConfig, resolveProvider } from '../config.js';
-import { createProvider } from '../providers/index.js';
+import { TextRequest } from '../types.js';
+import { loadConfig, resolveProviders } from '../config.js';
+import { callWithFailover } from '../failover.js';
 
 export interface TextCommandOptions {
   model?: string;
@@ -36,9 +36,8 @@ export async function handleTextCommand(
       throw new Error('No prompt provided (use positional argument or --input flag)');
     }
 
-    // Resolve provider
-    const { provider: providerName, config: providerConfig } = resolveProvider(model);
-    const provider = createProvider(providerConfig.type, providerConfig);
+    // Resolve providers (ordered by priority)
+    const providers = resolveProviders(model);
 
     // Build request
     const request: TextRequest = {
@@ -49,8 +48,10 @@ export async function handleTextCommand(
       maxTokens: options.maxTokens,
     };
 
-    // Generate text
-    const response = await provider.generateText(request);
+    // Generate text with failover
+    const response = await callWithFailover(providers, (provider) =>
+      provider.generateText(request)
+    );
 
     // Output result
     if (options.json !== false) {

@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { ImageRequest, ImageResponse } from '../types.js';
-import { loadConfig, resolveProvider } from '../config.js';
-import { createProvider } from '../providers/index.js';
+import { ImageRequest } from '../types.js';
+import { loadConfig, resolveProviders } from '../config.js';
+import { callWithFailover } from '../failover.js';
 
 export interface ImageCommandOptions {
   model?: string;
@@ -39,9 +39,8 @@ export async function handleImageCommand(
     // Determine output path
     const outputPath = options.output || path.join(process.cwd(), `image-${Date.now()}.png`);
 
-    // Resolve provider
-    const { provider: providerName, config: providerConfig } = resolveProvider(model);
-    const provider = createProvider(providerConfig.type, providerConfig);
+    // Resolve providers (ordered by priority)
+    const providers = resolveProviders(model);
 
     // Build request
     const request: ImageRequest = {
@@ -52,8 +51,10 @@ export async function handleImageCommand(
       height: options.height,
     };
 
-    // Generate image
-    const response = await provider.generateImage(request);
+    // Generate image with failover
+    const response = await callWithFailover(providers, (provider) =>
+      provider.generateImage(request)
+    );
 
     // Output result
     if (options.json !== false) {

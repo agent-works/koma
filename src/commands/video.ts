@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { VideoRequest, VideoResponse } from '../types.js';
-import { loadConfig, resolveProvider } from '../config.js';
-import { createProvider } from '../providers/index.js';
+import { VideoRequest } from '../types.js';
+import { loadConfig, resolveProviders } from '../config.js';
+import { callWithFailover } from '../failover.js';
 
 export interface VideoCommandOptions {
   model?: string;
@@ -57,16 +57,8 @@ export async function handleVideoCommand(
     // Determine output path
     const outputPath = options.output || path.join(process.cwd(), `video-${Date.now()}.mp4`);
 
-    // Resolve provider
-    const { provider: providerName, config: providerConfig } = resolveProvider(model);
-    const provider = createProvider(providerConfig.type, providerConfig);
-
-    if (!provider.generateVideo) {
-      throw new Error(
-        `Provider "${providerName}" does not support video generation. ` +
-        `Model "${model}" cannot be used for video.`
-      );
-    }
+    // Resolve providers (ordered by priority)
+    const providers = resolveProviders(model);
 
     // Build request
     const request: VideoRequest = {
@@ -85,8 +77,16 @@ export async function handleVideoCommand(
       timeoutMs: options.timeout ? options.timeout * 1000 : undefined,
     };
 
-    // Generate video
-    const response = await provider.generateVideo(request);
+    // Generate video with failover
+    const response = await callWithFailover(providers, (provider, providerName) => {
+      if (!provider.generateVideo) {
+        throw new Error(
+          `Provider "${providerName}" does not support video generation. ` +
+          `Model "${model}" cannot be used for video.`
+        );
+      }
+      return provider.generateVideo(request);
+    });
 
     // Output result
     if (options.json !== false) {
