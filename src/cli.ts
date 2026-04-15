@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import { handleTextCommand } from './commands/text.js';
 import { handleImageCommand } from './commands/image.js';
-import { handleVideoCommand } from './commands/video.js';
+import { handleSeedanceCommand, buildSeedanceHelp } from './commands/seedance.js';
 import { handleModelsCommand } from './commands/models.js';
 import { loadConfig } from './config.js';
 
@@ -41,10 +41,10 @@ generation models from different providers through one interface.
 Configure once, use everywhere.
 
 Commands:
-  koma text [prompt]     Generate text (chat completion)
-  koma image [prompt]    Generate an image and save to file
-  koma video [prompt]    Generate a video (Seedance 1.5 Pro / 2.0)
-  koma models            List all available models as JSON
+  koma text [prompt]        Generate text (chat completion)
+  koma image [prompt]       Generate an image and save to file
+  koma seedance [prompt]    Generate video (Seedance 1.5 Pro / 2.0)
+  koma models               List all available models as JSON
 
 Global Options:
   -m, --model <name>     Model to use (overrides default)
@@ -76,30 +76,17 @@ Examples:
   # Image with specific model
   koma image -m gemini-3.1-flash-image-preview "a cyberpunk cityscape" -o city.png
 
-  # Video generation (Seedance 1.5 Pro, text-to-video)
-  koma video "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
+  # Video generation (Seedance 1.5 Pro)
+  koma seedance "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
 
-  # Video with image first-frame (image-to-video)
-  koma video "女孩微笑着转身" --image https://example.com/photo.png -o out.mp4
+  # Image-to-video with first frame
+  koma seedance "女孩微笑着转身" --first-frame photo.jpg -o out.mp4
 
-  # Video with Seedance 2.0 (需先开通权限)
-  koma video -m seedance-2.0 "赛博朋克城市" -o city.mp4
-
-  # Video with options
-  koma video "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no-watermark
+  # Seedance 2.0 with audio
+  koma seedance -m 2.0 "赛博朋克城市夜景" --audio --ratio 16:9
 
   # List all models and defaults (JSON)
   koma models
-
-Video Options:
-  --image <url>            First-frame image URL (image-to-video)
-  --ratio <ratio>          Aspect ratio: 16:9, 9:16, 1:1, 21:9, 3:4, adaptive
-  --duration <sec>         Duration: 5 or 10 seconds
-  --audio                  Generate audio track
-  --no-watermark           Disable watermark
-  --camera-fixed           Keep camera static
-  --seed <n>               Random seed (0–4294967295)
-  --negative-prompt <text> What to exclude
 
 Output Format:
   All commands output JSON to stdout by default.
@@ -107,7 +94,7 @@ Output Format:
 
   text response:  {"model": "...", "text": "...", "usage": {"inputTokens": N, "outputTokens": N}}
   image response: {"model": "...", "filePath": "...", "mimeType": "...", "sizeBytes": N}
-  video response: {"model": "...", "taskId": "...", "status": "succeeded", "filePath": "..."}
+  seedance:    {"model": "...", "taskId": "...", "status": "succeeded", "filePath": "..."}
 
 Configuration:
   Config file search order: ./koma.yaml → ~/.koma/koma.yaml
@@ -164,33 +151,46 @@ program
   });
 
 program
-  .command('video [prompt]')
-  .description('Generate a video using Seedance (1.5 Pro / 2.0)')
-  .option('--image <url>', 'First-frame image URL for image-to-video')
-  .option('--ratio <ratio>', 'Aspect ratio (16:9, 9:16, 1:1, 21:9, 3:4, adaptive)')
-  .option('--duration <seconds>', 'Duration: 5 or 10', (v: string) => parseInt(v))
-  .option('--audio', 'Generate audio track')
+  .command('seedance [prompt]')
+  .description('Generate video using Seedance (1.5 Pro / 2.0)')
+  .option('-m, --model <name>', 'Model: 1.5-pro (default), 2.0, 2.0-fast')
+  .option('--first-frame <url>', 'First frame image (image-to-video)')
+  .option('--last-frame <url>', 'Last frame image (start+end control)')
+  .option('--negative-prompt <text>', 'What to exclude from generation')
+  .option('--return-last-frame', 'Return last frame URL for chaining clips')
+  .option('--resolution <res>', 'Resolution: 480p, 720p (default), 1080p')
+  .option('--ratio <ratio>', 'Aspect ratio: 16:9, 9:16, 1:1, 4:3, 3:4, 21:9, adaptive')
+  .option('--duration <sec>', 'Duration in seconds', (v: string) => parseInt(v))
+  .option('--seed <n>', 'Random seed (0-4294967295)', (v: string) => parseInt(v))
+  .option('--audio', 'Generate synchronized audio')
   .option('--no-watermark', 'Disable watermark')
-  .option('--camera-fixed', 'Keep camera static')
-  .option('--seed <number>', 'Random seed for reproducibility', (v: string) => parseInt(v))
-  .option('--negative-prompt <text>', 'What to exclude from the video')
-  .option('--poll-interval <seconds>', 'Poll interval in seconds (default 5)', (v: string) => parseInt(v))
-  .option('--timeout <seconds>', 'Max wait time in seconds (default 600)', (v: string) => parseInt(v))
+  .option('--camera-fixed', 'Lock camera position (1.5 only)')
+  .option('--draft', 'Draft preview mode (1.5 only)')
+  .option('--poll-interval <sec>', 'Poll interval in seconds (default: 5)', (v: string) => parseInt(v))
+  .option('--timeout <sec>', 'Max wait time in seconds (default: 600)', (v: string) => parseInt(v))
+  .option('--input <file>', 'Read prompt from file')
+  .option('-o, --output <file>', 'Output file path')
+  .option('--json', 'JSON output (default true)', true)
+  .addHelpText('beforeAll', '')
+  .configureHelp({ formatHelp: () => buildSeedanceHelp() })
   .action(async (prompt: string | undefined, cmdOpts: any) => {
-    const parent = program.opts();
-    await handleVideoCommand(prompt, {
-      model: parent.model,
-      input: parent.input,
-      output: parent.output,
-      json: parent.json !== false,
-      image: cmdOpts.image,
+    await handleSeedanceCommand(prompt, {
+      model: cmdOpts.model,
+      input: cmdOpts.input,
+      output: cmdOpts.output,
+      json: cmdOpts.json !== false,
+      firstFrame: cmdOpts.firstFrame,
+      lastFrame: cmdOpts.lastFrame,
+      negativePrompt: cmdOpts.negativePrompt,
+      returnLastFrame: cmdOpts.returnLastFrame,
+      resolution: cmdOpts.resolution,
       ratio: cmdOpts.ratio,
       duration: cmdOpts.duration,
-      audio: cmdOpts.audio,
-      noWatermark: cmdOpts.watermark === false, // --no-watermark sets watermark to false
-      cameraFixed: cmdOpts.cameraFixed,
       seed: cmdOpts.seed,
-      negativePrompt: cmdOpts.negativePrompt,
+      audio: cmdOpts.audio,
+      noWatermark: cmdOpts.watermark === false,
+      cameraFixed: cmdOpts.cameraFixed,
+      draft: cmdOpts.draft,
       pollInterval: cmdOpts.pollInterval,
       timeout: cmdOpts.timeout,
     });
