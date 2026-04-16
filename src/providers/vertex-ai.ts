@@ -91,12 +91,24 @@ export class VertexAIProvider extends BaseProvider {
       const location = this.getLocation();
       const accessToken = await this.getAccessToken();
 
+      // Build parts array
+      const parts: any[] = [{ text: req.prompt }];
+
+      // Append file data as inlineData parts
+      if (req.files) {
+        for (const file of req.files) {
+          parts.push({
+            inlineData: { mimeType: file.mimeType, data: file.data },
+          });
+        }
+      }
+
       // Build request body
       const requestBody: any = {
         contents: [
           {
             role: 'user',
-            parts: [{ text: req.prompt }],
+            parts,
           },
         ],
         generationConfig: {
