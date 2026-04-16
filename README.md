@@ -43,6 +43,25 @@ koma models
 --input <file>         从文件读取 prompt
 -o, --output <file>    输出到文件
 --json                 JSON 输出（默认开启）
+--file <path>          附加文件（图片/视频/音频/PDF），可多次使用
+```
+
+### 多模态输入
+
+`koma text` 和 `koma image` 支持通过 `--file` 传入图片、视频、音频、PDF 等文件，让多模态模型（Gemini、GPT-4o）理解和处理。
+
+```bash
+# 图片理解
+koma text "描述这张图片" --file photo.jpg
+
+# 视频分析
+koma text "总结这个视频的内容" --file meeting.mp4
+
+# 多文件对比
+koma text "对比这两张图的差异" --file before.png --file after.png
+
+# 以图生图（风格转换）
+koma image "转换为吉卜力动画风格" --file photo.jpg -o ghibli.png
 ```
 
 ### Seedance 视频生成

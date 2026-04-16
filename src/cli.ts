@@ -86,6 +86,9 @@ Examples:
   # Multimodal: multiple files
   koma text "对比这两张图" --file before.png --file after.png
 
+  # Image with reference image (style transfer, editing)
+  koma image "转换为吉卜力动画风格" --file photo.jpg -o ghibli.png
+
   # Image generation (Nano Banana Pro)
   koma image "一只橘猫戴着礼帽坐在窗台上，水彩画风格" -o cat.png
 

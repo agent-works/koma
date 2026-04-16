@@ -111,7 +111,7 @@ Generation:
   --audio                    Generate synchronized audio              [1.5, 2.0]
   --no-watermark             Disable watermark
   --camera-fixed             Lock camera position                     [1.5 only]
-  --draft                    Draft preview mode (lower cost)          [1.5 only]
+  --draft                    Draft preview mode (lower cost)          [1.5, T2V only]
 
 Polling:
   --poll-interval <sec>      Status check interval (default: 5)
