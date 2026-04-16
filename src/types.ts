@@ -29,6 +29,8 @@ export interface TextRequest {
   systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
+  /** Attached files for multimodal input (images, video, audio, PDF) */
+  files?: Array<{ mimeType: string; data: string }>;
 }
 
 export interface TextResponse {
