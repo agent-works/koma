@@ -30,12 +30,27 @@ export class OpenAICompatibleProvider extends BaseProvider {
   }
 
   async generateText(req: TextRequest): Promise<TextResponse> {
-    const messages: Array<{ role: string; content: string }> = [];
+    const messages: Array<{ role: string; content: any }> = [];
 
     if (req.systemPrompt) {
       messages.push({ role: 'system', content: req.systemPrompt });
     }
-    messages.push({ role: 'user', content: req.prompt });
+
+    // Build user message: plain string or multimodal content array
+    const imageFiles = (req.files || []).filter(f => f.mimeType.startsWith('image/'));
+
+    if (imageFiles.length > 0) {
+      const content: any[] = [{ type: 'text', text: req.prompt }];
+      for (const file of imageFiles) {
+        content.push({
+          type: 'image_url',
+          image_url: { url: `data:${file.mimeType};base64,${file.data}` },
+        });
+      }
+      messages.push({ role: 'user', content });
+    } else {
+      messages.push({ role: 'user', content: req.prompt });
+    }
 
     const body: any = {
       model: req.model,
