@@ -3,6 +3,7 @@ import path from 'path';
 import { ImageRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
+import { resolveFile } from '../utils.js';
 
 export interface ImageCommandOptions {
   model?: string;
@@ -11,6 +12,7 @@ export interface ImageCommandOptions {
   input?: string;
   output?: string;
   json?: boolean;
+  file?: string[];
 }
 
 export async function handleImageCommand(
@@ -42,6 +44,9 @@ export async function handleImageCommand(
     // Resolve providers (ordered by priority)
     const providers = resolveProviders(model);
 
+    // Resolve attached files
+    const files = options.file?.map(f => resolveFile(f));
+
     // Build request
     const request: ImageRequest = {
       model,
@@ -49,6 +54,7 @@ export async function handleImageCommand(
       outputPath,
       width: options.width,
       height: options.height,
+      files,
     };
 
     // Generate image with failover

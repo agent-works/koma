@@ -156,7 +156,8 @@ program
 program
   .command('image [prompt]')
   .description('Generate an image using an AI model')
-  .action(async (prompt: string | undefined) => {
+  .option('--file <path>', 'Reference image file, repeatable', (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
+  .action(async (prompt: string | undefined, cmdOpts: any) => {
     const parent = program.opts();
     await handleImageCommand(prompt, {
       model: parent.model,
@@ -165,6 +166,7 @@ program
       input: parent.input,
       output: parent.output,
       json: parent.json !== false,
+      file: cmdOpts.file?.length > 0 ? cmdOpts.file : undefined,
     });
   });
 

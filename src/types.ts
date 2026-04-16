@@ -45,6 +45,8 @@ export interface ImageRequest {
   outputPath?: string;
   width?: number;
   height?: number;
+  /** Attached files for reference image input */
+  files?: Array<{ mimeType: string; data: string }>;
 }
 
 export interface ImageResponse {
