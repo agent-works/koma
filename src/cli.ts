@@ -77,6 +77,15 @@ Examples:
   # Text from file input, save output
   koma text --input chapter.txt --system "分析这个章节的主要人物" -o analysis.txt
 
+  # Multimodal: describe an image
+  koma text "描述这张图片" --file photo.jpg
+
+  # Multimodal: analyze a video
+  koma text "总结这个视频的内容" --file meeting.mp4
+
+  # Multimodal: multiple files
+  koma text "对比这两张图" --file before.png --file after.png
+
   # Image generation (Nano Banana Pro)
   koma image "一只橘猫戴着礼帽坐在窗台上，水彩画风格" -o cat.png
 
@@ -129,7 +138,8 @@ program
 program
   .command('text [prompt]')
   .description('Generate text using an AI model')
-  .action(async (prompt: string | undefined) => {
+  .option('--file <path>', 'Attach file (image/video/audio/PDF), repeatable', (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
+  .action(async (prompt: string | undefined, cmdOpts: any) => {
     const parent = program.opts();
     await handleTextCommand(prompt, {
       model: parent.model,
@@ -139,6 +149,7 @@ program
       input: parent.input,
       output: parent.output,
       json: parent.json !== false,
+      file: cmdOpts.file?.length > 0 ? cmdOpts.file : undefined,
     });
   });
 

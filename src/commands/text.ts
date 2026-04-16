@@ -2,6 +2,7 @@ import fs from 'fs';
 import { TextRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
+import { resolveFile } from '../utils.js';
 
 export interface TextCommandOptions {
   model?: string;
@@ -11,6 +12,7 @@ export interface TextCommandOptions {
   input?: string;
   output?: string;
   json?: boolean;
+  file?: string[];
 }
 
 export async function handleTextCommand(
@@ -36,6 +38,9 @@ export async function handleTextCommand(
       throw new Error('No prompt provided (use positional argument or --input flag)');
     }
 
+    // Resolve attached files
+    const files = options.file?.map(f => resolveFile(f));
+
     // Resolve providers (ordered by priority)
     const providers = resolveProviders(model);
 
@@ -46,6 +51,7 @@ export async function handleTextCommand(
       systemPrompt: options.system,
       temperature: options.temperature,
       maxTokens: options.maxTokens,
+      files,
     };
 
     // Generate text with failover
