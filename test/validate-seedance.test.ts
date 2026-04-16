@@ -2,7 +2,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateSeedanceParams, resolveImageUrl } from '../src/commands/seedance.js';
+import { validateSeedanceParams } from '../src/commands/seedance.js';
+import { resolveImageUrl } from '../src/utils.js';
 
 describe('validateSeedanceParams', () => {
   it('accepts valid 1.5-pro params', () => {
@@ -125,7 +126,7 @@ describe('resolveImageUrl', () => {
   it('throws on nonexistent file', () => {
     assert.throws(
       () => resolveImageUrl('/tmp/nonexistent-koma-image.jpg'),
-      { message: 'Image file not found: /tmp/nonexistent-koma-image.jpg' }
+      { message: 'File not found: /tmp/nonexistent-koma-image.jpg' }
     );
   });
 });
