@@ -87,6 +87,26 @@ describe('validateSeedanceParams', () => {
       validateSeedanceParams('1.5-pro', {});
     });
   });
+
+  it('rejects --draft with --first-frame', () => {
+    assert.throws(
+      () => validateSeedanceParams('1.5-pro', { draft: true, firstFrame: './img.jpg' }),
+      { message: '--draft is only supported for text-to-video. Remove --first-frame/--last-frame to use draft mode.' }
+    );
+  });
+
+  it('rejects --draft with --last-frame', () => {
+    assert.throws(
+      () => validateSeedanceParams('1.5-pro', { draft: true, lastFrame: './img.jpg' }),
+      { message: '--draft is only supported for text-to-video. Remove --first-frame/--last-frame to use draft mode.' }
+    );
+  });
+
+  it('accepts --first-frame + --last-frame without --draft', () => {
+    assert.doesNotThrow(() => {
+      validateSeedanceParams('1.5-pro', { firstFrame: './a.jpg', lastFrame: './b.jpg' });
+    });
+  });
 });
 
 describe('resolveImageUrl', () => {

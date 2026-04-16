@@ -181,6 +181,7 @@ export class VolcengineArkProvider extends BaseProvider {
       content.push({
         type: 'image_url',
         image_url: { url: req.referenceImageUrl },
+        role: 'first_frame',
       });
     }
 
@@ -189,6 +190,7 @@ export class VolcengineArkProvider extends BaseProvider {
       content.push({
         type: 'image_url',
         image_url: { url: req.lastFrameUrl },
+        role: 'last_frame',
       });
     }
 

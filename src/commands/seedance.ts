@@ -54,9 +54,12 @@ export function validateSeedanceParams(
     throw new Error('--camera-fixed is only supported by Seedance 1.5 Pro.');
   }
 
-  // Draft: 1.5 only
+  // Draft: 1.5 only, and T2V only (not compatible with image input)
   if (opts.draft && v2) {
     throw new Error('--draft is only supported by Seedance 1.5 Pro.');
+  }
+  if (opts.draft && (opts.firstFrame || opts.lastFrame)) {
+    throw new Error('--draft is only supported for text-to-video. Remove --first-frame/--last-frame to use draft mode.');
   }
 
   // Duration validation
@@ -201,6 +204,8 @@ export async function handleSeedanceCommand(
       duration: options.duration,
       cameraFixed: options.cameraFixed,
       draft: options.draft,
+      firstFrame: options.firstFrame,
+      lastFrame: options.lastFrame,
     });
 
     // Get prompt from argument or file
