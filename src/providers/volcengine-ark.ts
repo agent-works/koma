@@ -103,7 +103,7 @@ export class VolcengineArkProvider extends BaseProvider {
         { role: 'user', content: req.prompt },
       ],
       temperature: req.temperature ?? 0.7,
-      max_tokens: req.maxTokens ?? 2048,
+      max_tokens: req.maxTokens ?? 8192,
     };
 
     const response = await fetch(url, {

@@ -113,7 +113,7 @@ export class VertexAIProvider extends BaseProvider {
         ],
         generationConfig: {
           temperature: req.temperature ?? 0.7,
-          maxOutputTokens: req.maxTokens ?? 2048,
+          maxOutputTokens: req.maxTokens ?? 8192,
         },
       };
 

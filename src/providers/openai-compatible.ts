@@ -57,7 +57,7 @@ export class OpenAICompatibleProvider extends BaseProvider {
       messages,
     };
     if (req.temperature !== undefined) body.temperature = req.temperature;
-    if (req.maxTokens !== undefined) body.max_tokens = req.maxTokens;
+    body.max_tokens = req.maxTokens ?? 8192;
 
     const response = await fetch(`${this.endpoint}/v1/chat/completions`, {
       method: 'POST',
