@@ -2,6 +2,7 @@ defaults:
   text: gemini-2.5-pro
   image: gemini-2.5-flash-image
   video: seedance-1.5-pro
+  tts: doubao-tts
 
 providers:
   vertex-ai:
@@ -22,6 +23,14 @@ providers:
     models:
       - seedance-2.0
       - seedance-1.5-pro
+
+  volcengine-tts:
+    type: volcengine-tts
+    appid: "your-volcengine-tts-appid"
+    key: your-access-token
+    cluster: volcano_tts
+    models:
+      - doubao-tts
 
   # openai:
   #   type: openai
