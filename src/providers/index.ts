@@ -2,6 +2,7 @@ import { Provider, ProviderConfig } from '../types.js';
 import { VertexAIProvider } from './vertex-ai.js';
 import { VolcengineArkProvider } from './volcengine-ark.js';
 import { OpenAICompatibleProvider } from './openai-compatible.js';
+import { VolcengineTTSProvider } from './volcengine-tts.js';
 
 export function createProvider(
   providerType: string,
@@ -12,6 +13,8 @@ export function createProvider(
       return new VertexAIProvider(config);
     case 'volcengine-ark':
       return new VolcengineArkProvider(config);
+    case 'volcengine-tts':
+      return new VolcengineTTSProvider(config);
     case 'openai':
     case 'anthropic':
     case 'openai-compatible':
@@ -21,4 +24,4 @@ export function createProvider(
   }
 }
 
-export { VertexAIProvider, VolcengineArkProvider, OpenAICompatibleProvider };
+export { VertexAIProvider, VolcengineArkProvider, OpenAICompatibleProvider, VolcengineTTSProvider };
