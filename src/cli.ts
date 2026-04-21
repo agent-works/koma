@@ -7,6 +7,7 @@ import { Command } from 'commander';
 import { handleTextCommand } from './commands/text.js';
 import { handleImageCommand } from './commands/image.js';
 import { handleSeedanceCommand, buildSeedanceHelp } from './commands/seedance.js';
+import { handleTTSCommand, buildTTSHelp } from './commands/tts.js';
 import { handleModelsCommand } from './commands/models.js';
 import { loadConfig } from './config.js';
 
@@ -51,6 +52,8 @@ Commands:
   koma image [prompt]       Generate an image and save to file
   koma seedance [prompt]    Generate video (Seedance 1.5 Pro / 2.0)
                             Run "koma seedance --help" for full params and examples
+  koma tts [text]           Generate speech audio from text
+                            Run "koma tts --help" for voice list and examples
   koma models               List all available models as JSON
 
 Global Options:
@@ -217,6 +220,50 @@ program
       draft: cmdOpts.draft,
       pollInterval: cmdOpts.pollInterval,
       timeout: cmdOpts.timeout,
+    });
+  });
+
+program
+  .command('tts [text]')
+  .description('Generate speech audio from text')
+  .option('-m, --model <name>', 'TTS model (default: from config)')
+  .option('--voice <id>', 'Voice ID (see --help -m <model> for available voices)')
+  .option('--speed <n>', 'Speech rate 0.2-3.0', (v: string) => parseFloat(v))
+  .option('--volume <n>', 'Volume 0.1-3.0', (v: string) => parseFloat(v))
+  .option('--pitch <n>', 'Pitch 0.1-3.0', (v: string) => parseFloat(v))
+  .option('--emotion <name>', 'Emotion (only supported by *_emo_* voices)')
+  .option('--format <fmt>', 'Audio format: mp3, wav, pcm, ogg_opus')
+  .option('--sample-rate <hz>', 'Sample rate 8000/16000/24000', (v: string) => parseInt(v))
+  .option('--input <file>', 'Read text from file')
+  .option('-o, --output <file>', 'Output file path')
+  .option('--json', 'JSON output (default true)', true)
+  .addHelpText('beforeAll', '')
+  .configureHelp({
+    formatHelp: () => {
+      // Read -m from raw argv to support "koma tts --help -m doubao-tts"
+      const argv = process.argv;
+      let model: string | undefined;
+      const mIdx = argv.findIndex((a) => a === '-m' || a === '--model');
+      if (mIdx >= 0 && mIdx + 1 < argv.length) {
+        model = argv[mIdx + 1];
+      }
+      return buildTTSHelp(model);
+    },
+  })
+  .action(async (text: string | undefined, cmdOpts: any) => {
+    const parent = program.opts();
+    await handleTTSCommand(text, {
+      model: cmdOpts.model || parent.model,
+      voice: cmdOpts.voice,
+      speed: cmdOpts.speed,
+      volume: cmdOpts.volume,
+      pitch: cmdOpts.pitch,
+      emotion: cmdOpts.emotion,
+      format: cmdOpts.format,
+      sampleRate: cmdOpts.sampleRate,
+      input: cmdOpts.input || parent.input,
+      output: cmdOpts.output || parent.output,
+      json: cmdOpts.json !== false,
     });
   });
 
