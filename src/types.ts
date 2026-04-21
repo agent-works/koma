@@ -1,5 +1,5 @@
 export interface KomaConfig {
-  defaults: { text?: string; image?: string; video?: string };
+  defaults: { text?: string; image?: string; video?: string; tts?: string };
   providers: Record<string, ProviderConfig>;
 }
 
@@ -9,8 +9,8 @@ export interface ServiceAccountConfig {
 }
 
 export interface ProviderConfig {
-  type: 'vertex-ai' | 'volcengine-ark' | 'openai' | 'anthropic' | 'openai-compatible';
-  /** API key (for key-based providers like volcengine-ark, openai, anthropic) */
+  type: 'vertex-ai' | 'volcengine-ark' | 'openai' | 'anthropic' | 'openai-compatible' | 'volcengine-tts';
+  /** API key or access token */
   key?: string;
   /** Custom base URL (for openai-compatible providers) */
   endpoint?: string;
@@ -20,6 +20,10 @@ export interface ProviderConfig {
   location?: string;
   /** Inline service account credentials (vertex-ai) */
   service_account?: ServiceAccountConfig;
+  /** Application ID (volcengine-tts) */
+  appid?: string;
+  /** Cluster identifier (volcengine-tts, e.g., "volcano_tts") */
+  cluster?: string;
   models: string[];
 }
 
@@ -101,10 +105,41 @@ export interface VideoResponse {
   error?: string;
 }
 
+export interface TTSRequest {
+  model: string;
+  text: string;
+  /** Provider-specific voice ID (e.g., "zh_male_aojiaobazong_moon_bigtts") */
+  voice?: string;
+  /** Speech rate 0.2-3.0 (default 1.0) */
+  speed?: number;
+  /** Volume 0.1-3.0 (default 1.0) */
+  volume?: number;
+  /** Pitch 0.1-3.0 (default 1.0) */
+  pitch?: number;
+  /** Emotion (only supported by *_emo_* voices) */
+  emotion?: string;
+  /** Audio format */
+  format?: 'mp3' | 'wav' | 'pcm' | 'ogg_opus';
+  /** Sample rate in Hz */
+  sampleRate?: number;
+  /** Output file path */
+  outputPath?: string;
+}
+
+export interface TTSResponse {
+  model: string;
+  filePath: string;
+  mimeType: string;
+  sizeBytes: number;
+  /** Duration in milliseconds (if returned by API) */
+  durationMs?: number;
+}
+
 export interface Provider {
   name: string;
   generateText(req: TextRequest): Promise<TextResponse>;
   generateImage(req: ImageRequest): Promise<ImageResponse>;
   generateVideo?(req: VideoRequest): Promise<VideoResponse>;
+  generateTTS?(req: TTSRequest): Promise<TTSResponse>;
   listModels(): string[];
 }
