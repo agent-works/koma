@@ -31,6 +31,7 @@ koma models
 | `koma text [prompt]` | 文本生成（chat completion） |
 | `koma image [prompt]` | 图像生成，保存到文件 |
 | `koma seedance [prompt]` | 视频生成（Seedance 1.5 Pro / 2.0），运行 `koma seedance --help` 查看完整参数 |
+| `koma tts [text]` | 语音合成（Doubao TTS，148 个预置音色），运行 `koma tts --help -m doubao-tts` 查看音色列表 |
 | `koma models` | 列出所有可用模型（JSON） |
 
 ### 常用选项
@@ -80,6 +81,24 @@ koma seedance "角色穿过花园" --first-frame start.jpg --last-frame end.jpg 
 
 # 2.0 模型
 koma seedance -m 2.0 "赛博朋克城市夜景" --duration 15 --audio
+```
+
+### 语音合成（TTS）
+
+`koma tts` 通过豆包大模型语音合成输出音频文件，提供 148 个预置音色（中/英/粤/川/台等多口音，含多情感音色）。运行 `koma tts --help -m doubao-tts` 查看完整音色列表。
+
+```bash
+# 最简单：指定音色合成
+koma tts "你好，欢迎使用 koma" --voice zh_female_shuangkuaisisi_moon_bigtts -o hello.mp3
+
+# 调整语速 + 情感（多情感音色）
+koma tts "欢迎光临" --voice zh_male_aojiaobazong_emo_v2_mars_bigtts --speed 1.2 --emotion 开心
+
+# 英文
+koma tts "Hello from Koma" --voice en_female_sarah_new_conversation_wvae_bigtts -o welcome.mp3
+
+# 从文件读取文本
+koma tts --input script.txt --voice zh_male_ruyayichen_emo_v2_mars_bigtts -o audio.mp3
 ```
 
 ### 示例
