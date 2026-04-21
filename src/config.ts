@@ -112,7 +112,7 @@ export function resolveProviders(modelName: string): Array<{
   });
 }
 
-export function getDefaultModel(type: 'text' | 'image' | 'video'): string {
+export function getDefaultModel(type: 'text' | 'image' | 'video' | 'tts'): string {
   const config = loadConfig();
   const modelName = config.defaults[type];
 
