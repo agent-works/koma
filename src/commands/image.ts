@@ -3,7 +3,7 @@ import path from 'path';
 import { ImageRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
-import { resolveFile } from '../utils.js';
+import { resolveFile, formatError } from '../utils.js';
 
 export interface ImageCommandOptions {
   model?: string;
@@ -69,8 +69,7 @@ export async function handleImageCommand(
       console.log(`Image saved to: ${response.filePath}`);
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(JSON.stringify({ error: message }, null, 2));
+    console.error(JSON.stringify({ error: formatError(error) }, null, 2));
     process.exit(1);
   }
 }

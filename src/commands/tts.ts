@@ -3,6 +3,7 @@ import path from 'path';
 import { TTSRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
+import { formatError } from '../utils.js';
 
 // ── Voice catalog types ─────────────────────────────────────────────
 
@@ -375,8 +376,7 @@ export async function handleTTSCommand(
       console.log(`Audio saved to: ${response.filePath}`);
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(JSON.stringify({ error: message }, null, 2));
+    console.error(JSON.stringify({ error: formatError(error) }, null, 2));
     process.exit(1);
   }
 }

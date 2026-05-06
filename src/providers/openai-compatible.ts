@@ -93,8 +93,12 @@ export class OpenAICompatibleProvider extends BaseProvider {
       model: req.model,
       prompt: req.prompt,
       n: 1,
-      response_format: 'b64_json',
     };
+    // gpt-image-* models don't accept response_format and return b64_json by default.
+    // Older DALL-E models default to URL, so we explicitly request b64_json for those.
+    if (!req.model.startsWith('gpt-image')) {
+      body.response_format = 'b64_json';
+    }
     if (req.width && req.height) {
       body.size = `${req.width}x${req.height}`;
     }

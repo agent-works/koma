@@ -3,7 +3,7 @@ import path from 'path';
 import { VideoRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
-import { resolveImageUrl } from '../utils.js';
+import { resolveImageUrl, formatError } from '../utils.js';
 
 // ── Model short names → config model names ─────────────────────────
 const SEEDANCE_MODEL_MAP: Record<string, string> = {
@@ -288,8 +288,7 @@ export async function handleSeedanceCommand(
       process.exit(1);
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(JSON.stringify({ error: message }, null, 2));
+    console.error(JSON.stringify({ error: formatError(error) }, null, 2));
     process.exit(1);
   }
 }

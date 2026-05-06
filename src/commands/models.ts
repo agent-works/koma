@@ -1,4 +1,5 @@
 import { loadConfig } from '../config.js';
+import { formatError } from '../utils.js';
 
 export interface ModelsCommandOptions {
   json?: boolean;
@@ -42,8 +43,7 @@ export async function handleModelsCommand(options: ModelsCommandOptions): Promis
       if (config.defaults.video) console.log(`  video: ${config.defaults.video}`);
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(JSON.stringify({ error: message }, null, 2));
+    console.error(JSON.stringify({ error: formatError(error) }, null, 2));
     process.exit(1);
   }
 }

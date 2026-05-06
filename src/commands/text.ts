@@ -2,7 +2,7 @@ import fs from 'fs';
 import { TextRequest } from '../types.js';
 import { loadConfig, resolveProviders } from '../config.js';
 import { callWithFailover } from '../failover.js';
-import { resolveFile } from '../utils.js';
+import { resolveFile, formatError } from '../utils.js';
 
 export interface TextCommandOptions {
   model?: string;
@@ -71,8 +71,7 @@ export async function handleTextCommand(
       fs.writeFileSync(options.output, response.text, 'utf-8');
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(JSON.stringify({ error: message }, null, 2));
+    console.error(JSON.stringify({ error: formatError(error) }, null, 2));
     process.exit(1);
   }
 }

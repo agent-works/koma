@@ -71,3 +71,24 @@ export function resolveImageUrl(pathOrUrl: string): string {
   const { mimeType, data } = resolveFile(pathOrUrl);
   return `data:${mimeType};base64,${data}`;
 }
+
+/**
+ * Format an error including its cause chain, so generic messages like
+ * "fetch failed" don't hide the actual underlying network/socket error.
+ */
+export function formatError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+
+  const parts: string[] = [error.message];
+  let cause: unknown = (error as any).cause;
+  let depth = 0;
+  while (cause instanceof Error && depth < 5) {
+    const causeMsg = (cause as any).code
+      ? `${(cause as any).code} ${cause.message}`
+      : cause.message;
+    parts.push(`caused by: ${causeMsg}`);
+    cause = (cause as any).cause;
+    depth += 1;
+  }
+  return parts.join(' — ');
+}

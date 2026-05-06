@@ -98,6 +98,9 @@ Examples:
   # Image with specific model
   koma image -m gemini-3.1-flash-image-preview "a cyberpunk cityscape" -o city.png
 
+  # OpenAI gpt-image-2 (1536x1024 by default, slower but high quality)
+  koma image -m gpt-image-2 "isometric pixel-art village at dusk" -o village.png
+
   # Video generation (Seedance 1.5 Pro)
   koma seedance "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
 
