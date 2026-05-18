@@ -9,6 +9,63 @@ interface AccessTokenCache {
   expiresAt: number;
 }
 
+function safeJson(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function summarizeParts(parts: unknown): unknown {
+  if (!Array.isArray(parts)) {
+    return parts;
+  }
+
+  return parts.map((part) => {
+    if (!part || typeof part !== 'object') {
+      return part;
+    }
+
+    const entry: Record<string, unknown> = {
+      keys: Object.keys(part),
+    };
+
+    const partRecord = part as Record<string, any>;
+    if (typeof partRecord.text === 'string') {
+      entry.textLength = partRecord.text.length;
+      if (partRecord.text.length > 0 && partRecord.text.length <= 80) {
+        entry.text = partRecord.text;
+      }
+    }
+    if (partRecord.inlineData) {
+      entry.inlineData = {
+        mimeType: partRecord.inlineData.mimeType,
+        dataLength: typeof partRecord.inlineData.data === 'string' ? partRecord.inlineData.data.length : undefined,
+      };
+    }
+
+    return entry;
+  });
+}
+
+function buildNoTextDetails(result: any, candidate: any): string {
+  const details: string[] = [];
+
+  if (candidate?.finishReason) {
+    details.push(`finishReason=${candidate.finishReason}`);
+  }
+  if (candidate?.safetyRatings) {
+    details.push(`safetyRatings=${safeJson(candidate.safetyRatings)}`);
+  }
+  if (result?.promptFeedback) {
+    details.push(`promptFeedback=${safeJson(result.promptFeedback)}`);
+  }
+  details.push(`parts=${safeJson(summarizeParts(candidate?.content?.parts))}`);
+
+  return details.length > 0 ? `: ${details.join('; ')}` : '';
+}
+
 export class VertexAIProvider extends BaseProvider {
   name = 'vertex-ai';
   private config: ProviderConfig;
@@ -149,11 +206,17 @@ export class VertexAIProvider extends BaseProvider {
       }
 
       const candidate = result.candidates[0];
-      if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-        throw new Error('No text content in Vertex AI response');
-      }
+      const responseParts = candidate.content?.parts;
+      const text = Array.isArray(responseParts)
+        ? responseParts
+            .map((part: any) => part?.text)
+            .filter((partText: unknown): partText is string => typeof partText === 'string' && partText.length > 0)
+            .join('')
+        : '';
 
-      const text = candidate.content.parts[0].text;
+      if (!text) {
+        throw new Error(`No text content in Vertex AI response${buildNoTextDetails(result, candidate)}`);
+      }
 
       const usage = result.usageMetadata
         ? {

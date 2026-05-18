@@ -26,6 +26,12 @@ export function isRetriableError(error: unknown): boolean {
     return true;
   }
 
+  // Vertex can return a candidate with finish/safety metadata but no text parts
+  // for truncated or blocked generations. Let same-model fallback providers try.
+  if (/No text content in Vertex AI response/i.test(message)) {
+    return true;
+  }
+
   return false;
 }
 
