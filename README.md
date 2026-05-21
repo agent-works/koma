@@ -105,7 +105,7 @@ koma tts --input script.txt --voice zh_male_ruyayichen_emo_v2_mars_bigtts -o aud
 
 ```bash
 # 指定模型和系统提示词
-koma text -m gemini-2.5-pro --system "你是一个分镜设计师" "把这段描述拆成5个分镜"
+koma text -m gemini-3.1-pro-preview --system "你是一个分镜设计师" "把这段描述拆成5个分镜"
 
 # 从文件输入，结果保存到文件
 koma text --input chapter.txt --system "分析这个章节的主要人物" -o analysis.txt
@@ -128,36 +128,54 @@ koma seedance "赛博朋克城市夜景" --ratio 16:9 --duration 10 --audio --no
 通过 `koma.yaml` 配置 provider 和默认模型。查找顺序：
 
 1. 当前工作目录 `./koma.yaml`
-2. koma 安装目录 `<pkg>/koma.yaml`
-3. 用户目录 `~/.koma/koma.yaml`
+2. 用户目录 `~/.koma/koma.yaml`
 
 ```yaml
 defaults:
-  text: gemini-2.5-pro
-  image: gemini-2.5-flash-image
+  text: gemini-3.1-pro-preview
+  image: gemini-3.1-flash-image-preview
   video: seedance-1.5-pro
+  tts: doubao-tts
 
 providers:
   vertex-ai:
     type: vertex-ai
-    project: your-gcp-project-id
+    project: $GOOGLE_CLOUD_PROJECT
     location: us-central1
     service_account:
-      client_email: your-sa@your-project.iam.gserviceaccount.com
-      private_key: "-----BEGIN PRIVATE KEY-----\n<your-key>\n-----END PRIVATE KEY-----\n"
+      client_email: $VERTEX_CLIENT_EMAIL
+      private_key: $VERTEX_PRIVATE_KEY
     models:
-      - gemini-2.5-pro
-      - gemini-2.5-flash-image
+      - gemini-3.1-pro-preview
+      - gemini-3.1-flash-image-preview
 
   volcengine-ark:
     type: volcengine-ark
-    key: your-api-key-here
+    key: $VOLCENGINE_ARK_API_KEY
     models:
       - seedance-2.0
       - seedance-1.5-pro
+
+  volcengine-tts:
+    type: volcengine-tts
+    appid: $VOLCENGINE_TTS_APPID
+    key: $VOLCENGINE_TTS_ACCESS_TOKEN
+    cluster: volcano_tts
+    models:
+      - doubao-tts
+
+  # Any OpenAI-compatible proxy or API.
+  # aiproxy:
+  #   type: openai-compatible
+  #   endpoint: https://your-proxy/v1
+  #   key: $AIPROXY_API_KEY
+  #   models:
+  #     - gpt-5.4-mini
+  #     - claude-sonnet-4-6
+  #     - gpt-image-2
 ```
 
-所有配置内容自包含在 `koma.yaml` 中，不依赖外部文件或环境变量。
+配置值支持 `$ENV_VAR` 环境变量引用，例如 `$VOLCENGINE_ARK_API_KEY`。
 
 Volcengine Ark API Key 在[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/apikey)获取。
 
@@ -190,18 +208,20 @@ src/
     text.ts           # text 子命令
     image.ts          # image 子命令
     seedance.ts       # seedance 子命令（视频生成）
+    tts.ts            # tts 子命令（语音合成）
     models.ts         # models 子命令
   providers/
     base.ts           # Provider 抽象基类
     vertex-ai.ts      # Vertex AI 实现（文本 & 图像）
     volcengine-ark.ts # 火山方舟实现（Seedance 视频 & 文本）
+    volcengine-tts.ts # 火山语音合成实现
     openai-compatible.ts # OpenAI 兼容实现（文本 & 图像）
     index.ts          # Provider 工厂
 ```
 
 ### Provider 扩展
 
-类型系统预留了 `openai`、`anthropic`、`openai-compatible` provider，当前实现了 `vertex-ai` 和 `volcengine-ark`。添加新 provider 需要：
+当前实现了 `vertex-ai`、`volcengine-ark`、`volcengine-tts` 和 `openai-compatible` provider。`openai-compatible` 需要在 `koma.yaml` 中配置 `endpoint` 和 `key`。添加新 provider 需要：
 
 1. 在 `src/providers/` 下新建实现，继承 `BaseProvider`
 2. 在 `src/providers/index.ts` 的工厂函数中注册
@@ -214,3 +234,4 @@ koma 的目标是成为 agent 的模型工具层——agent 不需要关心 prov
 - `koma text` — 推理、规划、分析
 - `koma image` — 视觉内容生成
 - `koma seedance` — Seedance 视频生成（专属命令，完整参数支持）
+- `koma tts` — 语音合成

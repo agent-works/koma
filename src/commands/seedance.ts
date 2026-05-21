@@ -17,7 +17,12 @@ function resolveModelName(shortName: string): string {
 }
 
 function isV2(model: string): boolean {
-  return model === '2.0' || model === '2.0-fast';
+  return (
+    model === '2.0' ||
+    model === '2.0-fast' ||
+    model === 'seedance-2.0' ||
+    model === 'seedance-2.0-fast'
+  );
 }
 
 // ── Parameter validation ────────────────────────────────────────────
@@ -194,12 +199,12 @@ export async function handleSeedanceCommand(
   try {
     const config = loadConfig();
 
-    // Determine model (short name like "1.5-pro" or "2.0")
-    const modelShort = options.model || '1.5-pro';
-    const modelName = resolveModelName(modelShort);
+    // Determine model (short name like "1.5-pro" or configured model name)
+    const modelInput = options.model || config.defaults.video || '1.5-pro';
+    const modelName = resolveModelName(modelInput);
 
     // Validate version-specific params
-    validateSeedanceParams(modelShort, {
+    validateSeedanceParams(modelName, {
       resolution: options.resolution,
       duration: options.duration,
       cameraFixed: options.cameraFixed,

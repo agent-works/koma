@@ -30,6 +30,7 @@ function buildHelp(): string {
         if (model === config.defaults.text) tags.push('default:text');
         if (model === config.defaults.image) tags.push('default:image');
         if (model === config.defaults.video) tags.push('default:video');
+        if (model === config.defaults.tts) tags.push('default:tts');
         const suffix = tags.length ? `  (${tags.join(', ')})` : '';
         lines.push(`    ${model}${suffix}    [${name}]`);
       }
@@ -75,7 +76,7 @@ Examples:
   koma text "用三句话介绍人工智能"
 
   # Text with specific model and system prompt
-  koma text -m gemini-2.5-pro --system "你是一个分镜设计师" "把这段描述拆成5个分镜"
+  koma text -m gemini-3.1-pro-preview --system "你是一个分镜设计师" "把这段描述拆成5个分镜"
 
   # Text from file input, save output
   koma text --input chapter.txt --system "分析这个章节的主要人物" -o analysis.txt

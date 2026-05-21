@@ -41,6 +41,7 @@ export async function handleModelsCommand(options: ModelsCommandOptions): Promis
       if (config.defaults.text) console.log(`  text: ${config.defaults.text}`);
       if (config.defaults.image) console.log(`  image: ${config.defaults.image}`);
       if (config.defaults.video) console.log(`  video: ${config.defaults.video}`);
+      if (config.defaults.tts) console.log(`  tts: ${config.defaults.tts}`);
     }
   } catch (error) {
     console.error(JSON.stringify({ error: formatError(error) }, null, 2));

@@ -33,6 +33,13 @@ describe('validateSeedanceParams', () => {
     );
   });
 
+  it('rejects --resolution 1080p for full seedance-2.0 config model name', () => {
+    assert.throws(
+      () => validateSeedanceParams('seedance-2.0', { resolution: '1080p' }),
+      { message: '--resolution 1080p is not supported by Seedance 2.0. Use 480p or 720p.' }
+    );
+  });
+
   it('rejects --camera-fixed for 2.0', () => {
     assert.throws(
       () => validateSeedanceParams('2.0', { cameraFixed: true }),
