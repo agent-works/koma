@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import yaml from 'js-yaml';
 import { handleModelsCommand } from '../src/commands/models.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
@@ -24,6 +25,14 @@ function runKoma(args: string[], cwd: string) {
 }
 
 describe('configuration consistency', () => {
+  it('uses global Vertex location for Gemini 3.1 defaults in example config', () => {
+    const examplePath = path.join(repoRoot, 'koma.yaml.example');
+    const config = yaml.load(fs.readFileSync(examplePath, 'utf-8')) as any;
+
+    assert.equal(config.defaults.text, 'gemini-3.1-pro-preview');
+    assert.equal(config.providers['vertex-ai'].location, 'global');
+  });
+
   it('uses defaults.video when seedance model is omitted', () => {
     const cwd = makeTempConfig(`
 defaults:

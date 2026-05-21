@@ -8,7 +8,7 @@ providers:
   vertex-ai:
     type: vertex-ai
     project: $GOOGLE_CLOUD_PROJECT
-    location: us-central1
+    location: global
     service_account:
       client_email: $VERTEX_CLIENT_EMAIL
       private_key: $VERTEX_PRIVATE_KEY

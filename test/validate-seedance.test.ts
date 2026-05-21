@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateSeedanceParams } from '../src/commands/seedance.js';
+import { buildSeedanceHelp, validateSeedanceParams } from '../src/commands/seedance.js';
 import { resolveImageUrl } from '../src/utils.js';
 
 describe('validateSeedanceParams', () => {
@@ -113,6 +113,15 @@ describe('validateSeedanceParams', () => {
     assert.doesNotThrow(() => {
       validateSeedanceParams('1.5-pro', { firstFrame: './a.jpg', lastFrame: './b.jpg' });
     });
+  });
+});
+
+describe('buildSeedanceHelp', () => {
+  it('describes the seedance default model as config-driven', () => {
+    const help = buildSeedanceHelp();
+
+    assert.doesNotMatch(help, /1\.5-pro \(default\)/);
+    assert.match(help, /default from config/i);
   });
 });
 

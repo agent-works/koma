@@ -90,7 +90,7 @@ export function buildSeedanceHelp(): string {
 Seedance video generation (Volcengine Ark)
 
 Models:
-  1.5-pro (default)    4-12s, up to 1080p, draft mode, camera control
+  1.5-pro              4-12s, up to 1080p, draft mode, camera control
   2.0                  4-15s, up to 720p, multi-modal reference
   2.0-fast             Same as 2.0, faster generation
 
@@ -106,7 +106,7 @@ Output:
   --return-last-frame        Return last frame URL (for chaining clips) [1.5, 2.0]
 
 Video specs:
-  -m, --model <name>         Model: 1.5-pro (default), 2.0, 2.0-fast
+  -m, --model <name>         Model: 1.5-pro, 2.0, 2.0-fast (default from config; fallback: 1.5-pro)
   --resolution <res>         480p, 720p (default), 1080p             [1080p: 1.5 only]
   --ratio <ratio>            16:9 (default), 9:16, 1:1, 4:3, 3:4, 21:9, adaptive
   --duration <sec>           Duration in seconds (4-12 for 1.5, 4-15 for 2.0)
@@ -124,7 +124,7 @@ Polling:
 
 Examples:
 
-  # Text-to-video (default model: 1.5-pro)
+  # Text-to-video (default from config; fallback: 1.5-pro)
   koma seedance "一只橘猫在屋顶上奔跑，镜头缓缓拉远"
 
   # Specify output file and ratio
