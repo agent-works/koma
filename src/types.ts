@@ -34,7 +34,7 @@ export interface TextRequest {
   temperature?: number;
   maxTokens?: number;
   /** Attached files for multimodal input (images, video, audio, PDF) */
-  files?: Array<{ mimeType: string; data: string }>;
+  files?: FileAttachment[];
 }
 
 export interface TextResponse {
@@ -47,10 +47,20 @@ export interface ImageRequest {
   model: string;
   prompt: string;
   outputPath?: string;
+  /** Provider-native image size, e.g. "1024x1024", "1536x1024", or "auto" */
+  size?: string;
+  /** Provider-native image quality, e.g. "low", "medium", "high", or "auto" */
+  quality?: string;
   width?: number;
   height?: number;
   /** Attached files for reference image input */
-  files?: Array<{ mimeType: string; data: string }>;
+  files?: FileAttachment[];
+}
+
+export interface FileAttachment {
+  mimeType: string;
+  data: string;
+  filename?: string;
 }
 
 export interface ImageResponse {
@@ -58,6 +68,8 @@ export interface ImageResponse {
   filePath: string;
   mimeType: string;
   sizeBytes: number;
+  /** Provider usage payload, when returned by the upstream image API */
+  usage?: Record<string, unknown>;
 }
 
 export interface VideoRequest {

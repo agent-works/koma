@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { FileAttachment } from './types.js';
 
 const MIME_MAP: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -41,7 +42,7 @@ export function isImageMime(mimeType: string): boolean {
  * Resolve a local file to {mimeType, data (base64)}.
  * Throws if file not found or exceeds size limit.
  */
-export function resolveFile(filePath: string): { mimeType: string; data: string } {
+export function resolveFile(filePath: string): FileAttachment {
   const resolved = path.resolve(filePath);
   if (!fs.existsSync(resolved)) {
     throw new Error(`File not found: ${filePath}`);
@@ -56,7 +57,7 @@ export function resolveFile(filePath: string): { mimeType: string; data: string 
 
   const mimeType = getMimeType(resolved);
   const data = fs.readFileSync(resolved).toString('base64');
-  return { mimeType, data };
+  return { mimeType, data, filename: path.basename(resolved) };
 }
 
 /**

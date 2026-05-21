@@ -89,6 +89,15 @@ export class OpenAICompatibleProvider extends BaseProvider {
   }
 
   async generateImage(req: ImageRequest): Promise<ImageResponse> {
+    const imageFiles = (req.files || []).filter(f => f.mimeType.startsWith('image/'));
+    if ((req.files || []).length > imageFiles.length) {
+      throw new Error('OpenAI-compatible image generation only supports image reference files');
+    }
+
+    if (imageFiles.length > 0) {
+      return this.generateImageEdit(req, imageFiles);
+    }
+
     const body: any = {
       model: req.model,
       prompt: req.prompt,
@@ -102,6 +111,8 @@ export class OpenAICompatibleProvider extends BaseProvider {
     if (req.width && req.height) {
       body.size = `${req.width}x${req.height}`;
     }
+    if (req.size) body.size = req.size;
+    if (req.quality) body.quality = req.quality;
 
     const response = await fetch(`${this.endpoint}/v1/images/generations`, {
       method: 'POST',
@@ -112,12 +123,52 @@ export class OpenAICompatibleProvider extends BaseProvider {
       body: JSON.stringify(body),
     });
 
+    const result = await this.parseImageResponse(response);
+    return this.writeImageResult(req, result);
+  }
+
+  private async generateImageEdit(
+    req: ImageRequest,
+    imageFiles: Array<{ mimeType: string; data: string; filename?: string }>
+  ): Promise<ImageResponse> {
+    const form = new FormData();
+    form.append('model', req.model);
+    form.append('prompt', req.prompt);
+    form.append('n', '1');
+    if (req.size) form.append('size', req.size);
+    if (req.quality) form.append('quality', req.quality);
+    if (!req.model.startsWith('gpt-image')) {
+      form.append('response_format', 'b64_json');
+    }
+
+    imageFiles.forEach((file, index) => {
+      const buffer = Buffer.from(file.data, 'base64');
+      const blob = new Blob([new Uint8Array(buffer)], { type: file.mimeType });
+      form.append('image', blob, file.filename || this.defaultImageFilename(file.mimeType, index));
+    });
+
+    const response = await fetch(`${this.endpoint}/v1/images/edits`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.config.key}`,
+      },
+      body: form,
+    });
+
+    const result = await this.parseImageResponse(response);
+    return this.writeImageResult(req, result);
+  }
+
+  private async parseImageResponse(response: Response): Promise<any> {
     if (!response.ok) {
       const errBody = await response.text();
       throw new Error(`OpenAI-compatible API error (${response.status}): ${errBody}`);
     }
-
     const result = await response.json() as any;
+    return result;
+  }
+
+  private writeImageResult(req: ImageRequest, result: any): ImageResponse {
     const imageData = result.data?.[0]?.b64_json;
 
     if (!imageData) {
@@ -138,7 +189,22 @@ export class OpenAICompatibleProvider extends BaseProvider {
       filePath: outputPath,
       mimeType: 'image/png',
       sizeBytes: buffer.length,
+      usage: result.usage,
     };
+  }
+
+  private defaultImageFilename(mimeType: string, index: number): string {
+    const extByMime: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'image/bmp': 'bmp',
+      'image/tiff': 'tiff',
+      'image/heic': 'heic',
+    };
+    const ext = extByMime[mimeType] || 'png';
+    return `reference-${index + 1}.${ext}`;
   }
 
   listModels(): string[] {

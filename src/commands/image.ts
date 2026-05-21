@@ -7,6 +7,8 @@ import { resolveFile, formatError } from '../utils.js';
 
 export interface ImageCommandOptions {
   model?: string;
+  size?: string;
+  quality?: string;
   width?: number;
   height?: number;
   input?: string;
@@ -52,6 +54,8 @@ export async function handleImageCommand(
       model,
       prompt: finalPrompt,
       outputPath,
+      size: options.size,
+      quality: options.quality,
       width: options.width,
       height: options.height,
       files,
@@ -72,4 +76,58 @@ export async function handleImageCommand(
     console.error(JSON.stringify({ error: formatError(error) }, null, 2));
     process.exit(1);
   }
+}
+
+export function buildImageHelp(): string {
+  let modelSection = '';
+  try {
+    const config = loadConfig();
+    const lines: string[] = [];
+
+    for (const [name, provider] of Object.entries(config.providers)) {
+      for (const model of provider.models) {
+        const isLikelyImageModel =
+          model === config.defaults.image ||
+          model.includes('image') ||
+          model.startsWith('imagen');
+        if (!isLikelyImageModel) continue;
+
+        const suffix = model === config.defaults.image ? '  (default:image)' : '';
+        lines.push(`    ${model}${suffix}    [${name}]`);
+      }
+    }
+
+    modelSection = lines.length
+      ? `Available Image Models:\n${lines.join('\n')}`
+      : 'Available Image Models:\n    (no likely image models found in config)';
+  } catch {
+    modelSection = 'Available Image Models:\n    (run "koma models" after configuring koma.yaml)';
+  }
+
+  return `
+koma image [prompt]
+===================
+
+Generate an image and save it to a file. Use --file for reference-image
+editing or style transfer when the selected model/provider supports it.
+
+Options:
+  -m, --model <name>           Model to use (overrides default image model)
+  --input <file>               Read prompt from file
+  -o, --output <file>          Output image path
+  --file <path>                Reference image file, repeatable
+  --size <size>                Image size (OpenAI-compatible: auto, 1024x1024, 1536x1024, 1024x1536)
+  --quality <quality>          Image quality (OpenAI-compatible: auto, low, medium, high)
+  --json                       JSON output (default: true)
+  -h, --help                   Show this help
+
+${modelSection}
+
+Examples:
+  # Text-to-image
+  koma image "isometric pixel-art village at dusk" --size 1536x1024 -o village.png
+
+  # Reference image / editing
+  koma image "转换为水彩画风格" --file photo.png --quality high -o watercolor.png
+`.trim();
 }

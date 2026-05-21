@@ -44,12 +44,12 @@ koma models
 --input <file>         从文件读取 prompt
 -o, --output <file>    输出到文件
 --json                 JSON 输出（默认开启）
---file <path>          附加文件（图片/视频/音频/PDF），可多次使用
+--file <path>          附加文件（text 支持多媒体；image 支持参考图），可多次使用
 ```
 
 ### 多模态输入
 
-`koma text` 和 `koma image` 支持通过 `--file` 传入图片、视频、音频、PDF 等文件，让多模态模型（Gemini、GPT-4o）理解和处理。
+`koma text` 支持通过 `--file` 传入图片、视频、音频、PDF 等文件，让多模态模型（Gemini、GPT-4o）理解和处理。`koma image` 的 `--file` 用作参考图；OpenAI-compatible provider 会在带参考图时调用 image edits 接口。
 
 ```bash
 # 图片理解
@@ -62,7 +62,25 @@ koma text "总结这个视频的内容" --file meeting.mp4
 koma text "对比这两张图的差异" --file before.png --file after.png
 
 # 以图生图（风格转换）
-koma image "转换为吉卜力动画风格" --file photo.jpg -o ghibli.png
+koma image "转换为吉卜力动画风格" --file photo.jpg --quality high -o ghibli.png
+```
+
+### 图像生成选项
+
+运行 `koma image --help` 可以查看图像专属参数。
+
+```bash
+--file <path>          参考图文件，可多次使用
+--size <size>          图像尺寸（OpenAI-compatible：auto、1024x1024、1536x1024、1024x1536）
+--quality <quality>    图像质量（OpenAI-compatible：auto、low、medium、high）
+```
+
+```bash
+# OpenAI-compatible 文生图
+koma image -m gpt-image-2 "isometric pixel-art village at dusk" --size 1536x1024 -o village.png
+
+# OpenAI-compatible 参考图编辑
+koma image -m gpt-image-2 "转换为水彩画风格" --file photo.png --quality high -o watercolor.png
 ```
 
 ### Seedance 视频生成

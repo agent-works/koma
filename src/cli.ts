@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { handleTextCommand } from './commands/text.js';
-import { handleImageCommand } from './commands/image.js';
+import { handleImageCommand, buildImageHelp } from './commands/image.js';
 import { handleSeedanceCommand, buildSeedanceHelp } from './commands/seedance.js';
 import { handleTTSCommand, buildTTSHelp } from './commands/tts.js';
 import { handleModelsCommand } from './commands/models.js';
@@ -51,6 +51,7 @@ Configure once, use everywhere.
 Commands:
   koma text [prompt]        Generate text (chat completion)
   koma image [prompt]       Generate an image and save to file
+                            Run "koma image --help" for image params and examples
   koma seedance [prompt]    Generate video (Seedance 1.5 Pro / 2.0)
                             Run "koma seedance --help" for full params and examples
   koma tts [text]           Generate speech audio from text
@@ -99,8 +100,8 @@ Examples:
   # Image with specific model
   koma image -m gemini-3.1-flash-image-preview "a cyberpunk cityscape" -o city.png
 
-  # OpenAI gpt-image-2 (1536x1024 by default, slower but high quality)
-  koma image -m gpt-image-2 "isometric pixel-art village at dusk" -o village.png
+  # OpenAI gpt-image-2 with native size/quality params
+  koma image -m gpt-image-2 "isometric pixel-art village at dusk" --size 1536x1024 --quality high -o village.png
 
   # Video generation (Seedance 1.5 Pro)
   koma seedance "一只橘猫在屋顶上奔跑，镜头缓缓拉远" -o cat.mp4
@@ -167,10 +168,16 @@ program
   .command('image [prompt]')
   .description('Generate an image using an AI model')
   .option('--file <path>', 'Reference image file, repeatable', (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
+  .option('--size <size>', 'Image size (OpenAI-compatible)')
+  .option('--quality <quality>', 'Image quality (OpenAI-compatible)')
+  .addHelpText('beforeAll', '')
+  .configureHelp({ formatHelp: () => buildImageHelp() })
   .action(async (prompt: string | undefined, cmdOpts: any) => {
     const parent = program.opts();
     await handleImageCommand(prompt, {
       model: parent.model,
+      size: cmdOpts.size,
+      quality: cmdOpts.quality,
       width: undefined,
       height: undefined,
       input: parent.input,
